@@ -6,10 +6,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
 spl_autoload_register(static function (string $class): void {
     $baseDir = __DIR__;
-    $paths = [
-        $baseDir . '/controllers/' . $class . '.php',
-        $baseDir . '/models/' . $class . '.php',
-    ];
+           $paths = [
+            $baseDir . '/controllers/' . $class . '.php',
+            $baseDir . '/models/' . $class . '.php',
+            $baseDir . '/services/' . $class . '.php',
+        ];
 
     foreach ($paths as $path) {
         if (is_file($path)) {
