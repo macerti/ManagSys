@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title ?? 'Auth System'); ?></title>
-    <link rel="stylesheet" href="<?= e(asset_url('css/styles.css')); ?>">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <header class="topbar">

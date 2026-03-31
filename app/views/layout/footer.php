@@ -1,4 +1,4 @@
 </main>
-<script src="<?= e(asset_url('js/app.js')); ?>"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

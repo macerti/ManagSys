@@ -87,21 +87,6 @@ function has_role(string $role): bool
     return in_array($role, $roles, true);
 }
 
-
-function asset_url(string $path): string
-{
-    $scriptDir = trim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
-    $prefix = $scriptDir !== '' && $scriptDir !== '.' ? '/' . $scriptDir : '';
-
-    // If app runs from /public, assets are /public/css or /public/js relative.
-    if (str_ends_with($prefix, '/public')) {
-        return $prefix . '/' . ltrim($path, '/');
-    }
-
-    // If app runs from project/web root (e.g., FTP public_html), assets live in /public/.
-    return $prefix . '/public/' . ltrim($path, '/');
-}
-
 function validate_email(string $email): bool
 {
     return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
