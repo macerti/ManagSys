@@ -62,7 +62,9 @@ class MailService
             <div class="token">$token</div>
             <p style="color:#999;font-size:12px">Link expires in 1 hour</p>
         </div>
-        <div class="footer"><p>&copy; 2024 ManagSys</p></div>
+        <div class="footer">
+  <p>&copy; <?php echo date("Y"); ?> Macerti</p>
+</div>
     </div>
 </body>
 </html>
