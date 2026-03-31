@@ -140,8 +140,21 @@ class AuthController
         require __DIR__ . '/../views/auth/forgot_password.php';
     }
 
-    public function resetPassword(): void
+        public function resetPassword(): void
     {
+        $token = trim($_GET['token'] ?? '');
+        $reset = null;
+
+        // Validate token from URL on GET request
+        if (!empty($token)) {
+            $reset = $this->resets->findValid($token);
+            if (!$reset) {
+                set_flash('error', 'Invalid or expired reset link. Please request a new one.');
+                redirect('index.php?page=forgot-password');
+            }
+        }
+
+        // Handle POST (password reset form submission)
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!verify_csrf()) {
                 set_flash('error', 'Invalid CSRF token.');
@@ -154,7 +167,7 @@ class AuthController
 
             if (!$reset || strlen($password) < 8) {
                 set_flash('error', 'Invalid token or weak password (min 8 chars).');
-                redirect('index.php?page=reset-password');
+                redirect('index.php?page=reset-password?token=' . urlencode($token));
             }
 
             $this->users->updatePassword($reset['user_id'], password_hash($password, PASSWORD_DEFAULT));
@@ -163,6 +176,7 @@ class AuthController
             redirect('index.php?page=login');
         }
 
+        // If we got here with valid token, show only password form
         require __DIR__ . '/../views/auth/reset_password.php';
     }
 }
