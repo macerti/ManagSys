@@ -111,22 +111,32 @@ class AuthController
                 set_flash('error', 'Invalid CSRF token.');
                 redirect('index.php?page=forgot-password');
             }
-
+    
             $email = trim($_POST['email'] ?? '');
             $user = $this->users->findByEmail($email);
-
+    
             if ($user) {
                 $token = bin2hex(random_bytes(24));
                 $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
                 $this->resets->create($user['id'], $token, $expiresAt);
-                set_flash('success', 'Reset token generated (email simulation): ' . $token);
+    
+                // ✅ Send actual email via MailService
+                $resetLink = 'https://app.macerti.com/index.php?page=reset-password&token=' . urlencode($token);
+                $emailSent = MailService::sendPasswordResetEmail($email, $token, $resetLink);
+    
+                if ($emailSent) {
+                    set_flash('success', 'Check your email for password reset instructions.');
+                } else {
+                    set_flash('warning', 'Password reset token created but email failed to send. Token: ' . $token);
+                }
             } else {
-                set_flash('success', 'If the email exists, a reset token has been generated.');
+                // Security: Don't reveal if email exists
+                set_flash('success', 'If that email exists in our system, you\'ll receive a password reset link shortly.');
             }
-
+    
             redirect('index.php?page=forgot-password');
         }
-
+    
         require __DIR__ . '/../views/auth/forgot_password.php';
     }
 
