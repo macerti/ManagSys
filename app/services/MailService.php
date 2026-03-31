@@ -1,42 +1,84 @@
 <?php
 
-namespace App\Services;
+class MailService
+{
+    private static $fromEmail = 'noreply@macerti.com';
+    private static $fromName = 'ManagSys - Accreditation';
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-class MailService {
-    private $mail;
-
-    public function __construct() {
-        $this->mail = new PHPMailer(true);
+    /**
+     * Send password reset email
+     */
+    public static function sendPasswordResetEmail(string $to, string $token, string $resetLink): bool
+    {
+        $subject = 'Password Reset Request - ManagSys';
+        $htmlBody = self::getPasswordResetTemplate($to, $resetLink, $token);
+        return self::send($to, $subject, $htmlBody);
     }
 
-    public function sendEmail($to, $subject, $body) {
-        try {
-            // Server settings
-            $this->mail->isSMTP();
-            $this->mail->Host = 'smtp.example.com'; // Set the SMTP server to send through
-            $this->mail->SMTPAuth = true; // Enable SMTP authentication
-            $this->mail->Username = 'your_email@example.com'; // SMTP username
-            $this->mail->Password = 'your_password'; // SMTP password
-            $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption, `ssl` also accepted
-            $this->mail->Port = 587; // TCP port to connect to
+    /**
+     * Core sending function using PHP mail()
+     */
+    private static function send(string $to, string $subject, string $htmlBody): bool
+    {
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: " . self::$fromName . " <" . self::$fromEmail . ">\r\n";
+        $headers .= "Reply-To: " . self::$fromEmail . "\r\n";
+        $headers .= "X-Mailer: ManagSys\r\n";
 
-            // Recipients
-            $this->mail->setFrom('from@example.com', 'Mailer');
-            $this->mail->addAddress($to); // Add a recipient
+        $result = mail($to, $subject, $htmlBody, $headers);
+        self::logEmail($to, $subject, $result);
+        return $result;
+    }
 
-            // Content
-            $this->mail->isHTML(true); // Set email format to HTML
-            $this->mail->Subject = $subject;
-            $this->mail->Body = $body;
-            $this->mail->AltBody = strip_tags($body);
+    /**
+     * HTML Email Template
+     */
+    private static function getPasswordResetTemplate(string $email, string $resetLink, string $token): string
+    {
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; }
+        .header { background-color: #007bff; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .button { display: inline-block; background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        .token { background-color: #f0f0f0; padding: 10px; border-radius: 5px; font-family: monospace; word-break: break-all; }
+        .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1>Password Reset</h1></div>
+        <div class="content">
+            <p>Hello,</p>
+            <p>You requested a password reset for <strong>$email</strong></p>
+            <p><a href="$resetLink" class="button">Reset Password</a></p>
+            <p>Or use this token:</p>
+            <div class="token">$token</div>
+            <p style="color:#999;font-size:12px">Link expires in 1 hour</p>
+        </div>
+        <div class="footer"><p>&copy; 2024 ManagSys</p></div>
+    </div>
+</body>
+</html>
+HTML;
+    }
 
-            $this->mail->send();
-            return 'Message has been sent';
-        } catch (Exception $e) {
-            return "Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}";
-        }
+    /**
+     * Log email attempts
+     */
+    private static function logEmail(string $to, string $subject, bool $success): void
+    {
+        $logDir = __DIR__ . '/../../logs';
+        @mkdir($logDir, 0755, true);
+        $logFile = $logDir . '/mail.log';
+        $timestamp = date('Y-m-d H:i:s');
+        $status = $success ? 'SUCCESS' : 'FAILED';
+        file_put_contents($logFile, "[$timestamp] $status - To: $to - Subject: $subject\n", FILE_APPEND);
     }
 }
